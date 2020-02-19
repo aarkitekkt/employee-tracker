@@ -37,7 +37,7 @@ LEFT JOIN department ON role.department_id = department.id;
 
 -- Seed Department Table
 
-INSERT INTO department (name)
+INSERT INTO departments (department)
 VALUES ("Forwards"), ("Midfielders"), ("Defenders"), ("GoalKeepers");
 
 SELECT * FROM department;
