@@ -28,10 +28,10 @@ CREATE TABLE employees (
     PRIMARY KEY (id)
 );
 
-SELECT first_name, last_name, title, salary, name
-from employee
-LEFT JOIN role ON employee.role_id = role.id
-LEFT JOIN department ON role.department_id = department.id;
+SELECT first_name, last_name, title, salary, department
+from employees
+LEFT JOIN roles ON employees.role_id = roles.id
+LEFT JOIN departments ON roles.department_id = departments.id;
 
 
 

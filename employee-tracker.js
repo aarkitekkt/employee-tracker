@@ -74,7 +74,7 @@ function start() {
 
 function showEmployees() {
 
-    var query = "SELECT first_name, last_name, title, salary, department FROM employees " +
+    var query = "SELECT employees.id, first_name, last_name, title, salary, department FROM employees " +
         "LEFT JOIN roles ON employees.role_id = roles.id LEFT JOIN departments ON roles.department_id = departments.id";
 
     connection.query(query, function (err, res) {
@@ -84,7 +84,7 @@ function showEmployees() {
 
         start();
     });
-}
+};
 
 function showDepartments() {
 
@@ -196,8 +196,6 @@ function addRole() {
             departmentList.push(res[i].department);
         }
 
-        console.log(departmentList);
-
         inquirer
             .prompt([{
                 name: "role",
@@ -215,11 +213,11 @@ function addRole() {
             }])
             .then(function (answer) {
 
-                var departmentId = ""
+                let departmentId = "";
 
                 for (let i = 0; i < departmentList.length; i++) {
-                    if (departmentList[i] === answer.department) {
-                        departmentId = i + 1;
+                    if (res[i].department === answer.department) {
+                        departmentId = res[i].id;
                     }
                 };
 
@@ -236,4 +234,75 @@ function addRole() {
                 });
             });
     });
-}
+};
+
+function updateEmployee() {
+    var query = "SELECT employees.id, first_name, last_name, title FROM employees " +
+        "LEFT JOIN roles ON employees.role_id = roles.id LEFT JOIN departments ON roles.department_id = departments.id";
+
+    connection.query(query, function (err, res) {
+        if (err) throw err;
+
+        var employeeList = [];
+        var employeeId = "";
+        var newRole = ""
+
+        for (let i = 0; i < res.length; i++) {
+            employeeList.push(res[i].id + " " + res[i].first_name + " " + res[i].last_name + " | " + res[i].title);
+        }
+
+        inquirer
+            .prompt({
+                name: "employee",
+                type: "list",
+                message: "Which Employee Role Would You Like To Update?",
+                choices: employeeList
+            })
+            .then(function (answer) {
+
+                employeeId = answer.employee.charAt(0);
+
+                connection.query("SELECT title from roles;", function (err, res) {
+                    if (err) throw err;
+
+                    var rolesList = [];
+
+                    for (let i = 0; i < res.length; i++) {
+                        rolesList.push(res[i].title);
+                    }
+
+                    inquirer
+                        .prompt({
+                            name: "newRole",
+                            type: "list",
+                            message: "What Is The New Role?",
+                            choices: rolesList
+                        }).then(function (answer) {
+
+                            newRole = answer.newRole;
+
+
+                            console.log(employeeId, newRole);
+
+                            var query = "UPDATE employees " +
+                                "LEFT JOIN roles ON employees.role_id = roles.id " +
+                                "LEFT JOIN departments ON roles.department_id = departments.id " +
+                                "SET title = ? " +
+                                "WHERE employees.id = ?;"
+
+                            connection.query(query, [newRole, employeeId], function (err, res) {
+                                if (err) throw err;
+
+                                console.log("Title changed to " + newRole);
+
+                                start();
+                            });
+                        });
+
+
+                })
+
+
+            })
+    })
+};
