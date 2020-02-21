@@ -74,8 +74,9 @@ function start() {
 
 function showEmployees() {
 
-    var query = "SELECT employees.id, first_name, last_name, title, salary, department FROM employees " +
-        "LEFT JOIN roles ON employees.role_id = roles.id LEFT JOIN departments ON roles.department_id = departments.id";
+    var query = "SELECT employees.id, first_name, last_name, title, salary, department, manager FROM employees " +
+        "LEFT JOIN roles ON employees.role_id = roles.id LEFT JOIN departments ON roles.department_id = departments.id " +
+        "LEFT JOIN managers ON managers.department_id = departments.id;";
 
     connection.query(query, function (err, res) {
         if (err) throw err;
@@ -260,15 +261,18 @@ function updateEmployee() {
             })
             .then(function (answer) {
 
-                employeeId = answer.employee.charAt(0);
+                let oldId = answer.employee.split(" ");
+                employeeId = oldId[0];
+                console.log(employeeId);
 
-                connection.query("SELECT title from roles;", function (err, res) {
+
+                connection.query("SELECT * from roles;", function (err, res) {
                     if (err) throw err;
 
                     var rolesList = [];
 
                     for (let i = 0; i < res.length; i++) {
-                        rolesList.push(res[i].title);
+                        rolesList.push(res[i].id + " " + res[i].title);
                     }
 
                     inquirer
@@ -279,7 +283,8 @@ function updateEmployee() {
                             choices: rolesList
                         }).then(function (answer) {
 
-                            newRole = answer.newRole;
+                            newRole = answer.newRole.split(" ");
+                            console.log(newRole);
 
 
                             console.log(employeeId, newRole);
@@ -287,22 +292,96 @@ function updateEmployee() {
                             var query = "UPDATE employees " +
                                 "LEFT JOIN roles ON employees.role_id = roles.id " +
                                 "LEFT JOIN departments ON roles.department_id = departments.id " +
-                                "SET title = ? " +
+                                "SET role_id = ? " +
                                 "WHERE employees.id = ?;"
 
-                            connection.query(query, [newRole, employeeId], function (err, res) {
+                            connection.query(query, [newRole[0], employeeId], function (err, res) {
                                 if (err) throw err;
 
-                                console.log("Title changed to " + newRole);
+                                console.log("Title changed to " + newRole[1]);
 
                                 start();
                             });
                         });
-
-
                 })
-
-
             })
     })
 };
+
+function getRoleId() {
+
+
+    connection.query("SELECT * FROM roles;", function (err, res) {
+        if (err) throw err;
+
+        for (let i = 0; i < res.length; i++) {
+            rolesList.push(res[i].title);
+        }
+
+        inquirer
+            .prompt({
+                name: "title",
+                type: "list",
+                message: "What Role Does This Employee Have?",
+                choices: rolesList
+            }).then(function (answer) {
+
+                for (let i = 0; i < res.length; i++) {
+                    if (res[i].title === answer.title) {
+                        roleId = res[i].id
+                        console.log("This guy is a " + roleId)
+                    }
+                }
+            })
+    });
+}
+
+
+
+function addEmployee() {
+
+    var rolesList = [];
+    var roleId = "";
+
+
+    connection.query("SELECT * FROM roles;", function (err, res) {
+        if (err) throw err;
+
+        for (let i = 0; i < res.length; i++) {
+            rolesList.push(res[i].title);
+        }
+
+        inquirer
+            .prompt([{
+                name: "firstName",
+                type: "input",
+                message: "What is Employees First Name?"
+            }, {
+                name: "lastName",
+                type: "input",
+                message: "What is Employees Last Name?"
+            }, {
+                name: "title",
+                type: "list",
+                message: "What Role Does This Employee Have?",
+                choices: rolesList
+            }])
+            .then(function (answer) {
+
+                for (let i = 0; i < res.length; i++) {
+                    if (res[i].title === answer.title) {
+                        roleId = res[i].id
+                        console.log(answer.firstName + answer.lastName + "is a " + roleId);
+                    }
+                }
+
+                connection.query("INSERT INTO employees (first_name, last_name, role_id) VALUES (?, ?, ?);", [answer.firstName, answer.lastName, roleId], function (err, res) {
+                    if (err) throw err;
+
+                    console.log(answer.firstName + " successfully added!");
+
+                    start();
+                })
+            });
+    })
+}
