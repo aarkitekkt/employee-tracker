@@ -32,6 +32,7 @@ function start() {
                 "Add New Department",
                 "Add New Role",
                 "Update Employee Role",
+                "Remove An Employee",
                 "exit"
             ]
         })
@@ -65,6 +66,10 @@ function start() {
                     updateEmployee();
                     break;
 
+                case "Remove An Employee":
+                    removeEmployee();
+                    break;
+
                 case "exit":
                     connection.end();
                     break;
@@ -86,6 +91,44 @@ function showEmployees() {
         start();
     });
 };
+
+function removeEmployee() {
+    var query = "SELECT employees.id, first_name, last_name, title FROM employees " +
+        "LEFT JOIN roles ON employees.role_id = roles.id LEFT JOIN departments ON roles.department_id = departments.id";
+
+    connection.query(query, function (err, res) {
+        if (err) throw err;
+
+        var employeeList = [];
+        var employeeId = "";
+        var newRole = ""
+
+        for (let i = 0; i < res.length; i++) {
+            employeeList.push(res[i].id + " " + res[i].first_name + " " + res[i].last_name + " | " + res[i].title);
+        }
+
+        inquirer
+            .prompt({
+                name: "employee",
+                type: "list",
+                message: "Which Employee Role Would You Like To Remove?",
+                choices: employeeList
+            }).then(function (answer) {
+                console.log(answer);
+                let removeId = answer.employee.split(" ");
+                console.log(removeId[0]);
+
+                connection.query("DELETE FROM employees WHERE id = ?;", [removeId[0]], function (err, res) {
+                    if (err) throw err;
+
+                    console.log(removeId[1] + " has been removed");
+
+                    start();
+                })
+            })
+
+    });
+}
 
 function showDepartments() {
 
