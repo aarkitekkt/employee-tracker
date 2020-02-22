@@ -18,6 +18,7 @@ connection.connect(function (err) {
     start();
 });
 
+// Function to prompt user for main menu of options.
 function start() {
     inquirer
         .prompt({
@@ -83,6 +84,7 @@ function start() {
         });
 }
 
+// Function to log all employees and their information in a table.
 function showEmployees() {
 
     var query = "SELECT employees.id, first_name, last_name, title, salary, department, manager FROM employees " +
@@ -98,6 +100,7 @@ function showEmployees() {
     });
 };
 
+// Function to delete an employee from the database.
 function removeEmployee() {
     var query = "SELECT employees.id, first_name, last_name, title FROM employees " +
         "LEFT JOIN roles ON employees.role_id = roles.id LEFT JOIN departments ON roles.department_id = departments.id";
@@ -135,6 +138,7 @@ function removeEmployee() {
     });
 }
 
+// Function to show all employees in selected department.
 function showDepartments() {
 
     var query = "SELECT department from departments;"
@@ -162,6 +166,7 @@ function showDepartments() {
     });
 };
 
+// Function to provide total salary budget of selected department.
 function viewBudget() {
 
     var query = "SELECT department from departments;"
@@ -222,6 +227,7 @@ function showDepartmentEmployees(dept) {
     })
 };
 
+// Function to show all employees holding a selected role.
 function showRoles() {
 
     var query = "SELECT title from roles;"
@@ -260,6 +266,7 @@ function showRoleEmployees(role) {
     })
 };
 
+// Function to add a new department to the database in the departments table.
 function addDepartment() {
     inquirer
         .prompt({
@@ -281,6 +288,7 @@ function addDepartment() {
         });
 };
 
+// Function to add a new role to the database in the roles table.
 function addRole() {
 
     connection.query("SELECT * from departments;", function (err, res) {
@@ -330,6 +338,7 @@ function addRole() {
     });
 };
 
+// Function to update an employees to a new selected role.
 function updateEmployee() {
     var query = "SELECT employees.id, first_name, last_name, title FROM employees " +
         "LEFT JOIN roles ON employees.role_id = roles.id LEFT JOIN departments ON roles.department_id = departments.id";
@@ -395,6 +404,7 @@ function updateEmployee() {
     })
 };
 
+// Function to add a new employee to the database.
 function addEmployee() {
 
     var rolesList = [];

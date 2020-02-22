@@ -42,4 +42,9 @@ First run "node employee-tracker.js" in the command line to begin using the appl
 ​
 ## Technical Overview
 ​
-1. 
+1. An inquirer prompt provides a list of options that the user can choose from to perform a certain task in the application.
+2. Using a switch statement, a function is ran based on the chosen option from the initial prompt.
+3. Depending on which task is chosen, an additional inquirer prompt may be used to gather more data needed in order to create a query statement.
+4. Once the query statement is able to me generated, it queries the MYSQL database to make the requested change based on the type of query that was made.
+5. Once the query is made, the response is logged in the console as an error or a success.
+6. The start function then runs and returns the user to the main menu where they can choose a new option or choose to exit which ends the connection to the server.
