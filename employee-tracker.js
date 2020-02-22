@@ -33,6 +33,7 @@ function start() {
                 "Add New Role",
                 "Update Employee Role",
                 "Remove An Employee",
+                "View Department Budget",
                 "exit"
             ]
         })
@@ -69,6 +70,11 @@ function start() {
                 case "Remove An Employee":
                     removeEmployee();
                     break;
+
+                case "View Department Budget":
+                    viewBudget();
+                    break;
+
 
                 case "exit":
                     connection.end();
@@ -111,12 +117,11 @@ function removeEmployee() {
             .prompt({
                 name: "employee",
                 type: "list",
-                message: "Which Employee Role Would You Like To Remove?",
+                message: "Which Employee Would You Like To Remove?",
                 choices: employeeList
             }).then(function (answer) {
-                console.log(answer);
+
                 let removeId = answer.employee.split(" ");
-                console.log(removeId[0]);
 
                 connection.query("DELETE FROM employees WHERE id = ?;", [removeId[0]], function (err, res) {
                     if (err) throw err;
@@ -138,7 +143,6 @@ function showDepartments() {
         if (err) throw err;
 
         var departmentList = [];
-        console.log('\n', '---------Departments-----------', '\n');
 
         for (let i = 0; i < res.length; i++) {
             departmentList.push(res[i].department);
@@ -158,12 +162,60 @@ function showDepartments() {
     });
 };
 
+function viewBudget() {
+
+    var query = "SELECT department from departments;"
+
+    connection.query(query, function (err, res) {
+        if (err) throw err;
+
+        var departmentList = [];
+
+        for (let i = 0; i < res.length; i++) {
+            departmentList.push(res[i].department);
+        }
+
+        inquirer
+            .prompt({
+                name: "department",
+                type: "list",
+                message: "Which Department Budget Would You Like To View?",
+                choices: departmentList
+            }).then(function (answer) {
+                var query = "SELECT salary FROM employees " +
+                    "INNER JOIN roles ON employees.role_id = roles.id LEFT JOIN departments ON roles.department_id = departments.id WHERE ?";
+
+                connection.query(query, { department: answer.department }, function (err, res) {
+                    if (err) throw err;
+
+                    console.log('\n', '---------' + answer.department + ' Budget-----------', '\n');
+
+                    var budget = 0;
+
+                    for (let i = 0; i < res.length; i++) {
+
+                        budget += res[i].salary;
+                    }
+
+                    console.log("The total " + answer.department + " budget is $" + budget, '\n');
+
+                    start();
+                });
+            });
+
+
+    });
+};
+
 function showDepartmentEmployees(dept) {
     var query = "SELECT first_name, last_name, title, salary FROM employees " +
         "INNER JOIN roles ON employees.role_id = roles.id LEFT JOIN departments ON roles.department_id = departments.id WHERE ?";
 
     connection.query(query, { department: dept.action }, function (err, res) {
         if (err) throw err;
+
+        console.log('\n', '---------' + dept.action + '-----------', '\n')
+
         console.table(res)
 
         start();
@@ -219,7 +271,7 @@ function addDepartment() {
 
             console.log(answer.department);
 
-            connection.query("INSERT INTO departments (department) VALUES (?)", [answer.department], function (err, res) {
+            connection.query("INSERT INTO departments (department) VALUES (?);", [answer.department], function (err, res) {
                 if (err) throw err;
 
                 console.log(answer.department + " added to departments!")
@@ -267,8 +319,6 @@ function addRole() {
 
                 let newRoleData = [answer.role, answer.salary, departmentId];
 
-                console.log(newRoleData);
-
                 connection.query("INSERT INTO roles (title, salary, department_id) VALUES (?)", [newRoleData], function (err, res) {
                     if (err) throw err;
 
@@ -306,8 +356,6 @@ function updateEmployee() {
 
                 let oldId = answer.employee.split(" ");
                 employeeId = oldId[0];
-                console.log(employeeId);
-
 
                 connection.query("SELECT * from roles;", function (err, res) {
                     if (err) throw err;
@@ -327,10 +375,6 @@ function updateEmployee() {
                         }).then(function (answer) {
 
                             newRole = answer.newRole.split(" ");
-                            console.log(newRole);
-
-
-                            console.log(employeeId, newRole);
 
                             var query = "UPDATE employees " +
                                 "LEFT JOIN roles ON employees.role_id = roles.id " +
@@ -350,36 +394,6 @@ function updateEmployee() {
             })
     })
 };
-
-function getRoleId() {
-
-
-    connection.query("SELECT * FROM roles;", function (err, res) {
-        if (err) throw err;
-
-        for (let i = 0; i < res.length; i++) {
-            rolesList.push(res[i].title);
-        }
-
-        inquirer
-            .prompt({
-                name: "title",
-                type: "list",
-                message: "What Role Does This Employee Have?",
-                choices: rolesList
-            }).then(function (answer) {
-
-                for (let i = 0; i < res.length; i++) {
-                    if (res[i].title === answer.title) {
-                        roleId = res[i].id
-                        console.log("This guy is a " + roleId)
-                    }
-                }
-            })
-    });
-}
-
-
 
 function addEmployee() {
 
@@ -414,7 +428,7 @@ function addEmployee() {
                 for (let i = 0; i < res.length; i++) {
                     if (res[i].title === answer.title) {
                         roleId = res[i].id
-                        console.log(answer.firstName + answer.lastName + "is a " + roleId);
+                        console.log(answer.firstName + answer.lastName + " has been added as a " + answer.title);
                     }
                 }
 
@@ -427,4 +441,4 @@ function addEmployee() {
                 })
             });
     })
-}
+};
